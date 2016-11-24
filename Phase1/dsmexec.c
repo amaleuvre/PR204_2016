@@ -47,9 +47,25 @@ int main(int argc, char *argv[])
     sigaction(SIGCHLD, &act_chld, NULL);
 
     /* lecture du fichier de machines */
+    FILE *fp;
+    fp = fopen("machine_file","r");
     /* 1- on recupere le nombre de processus a lancer */
+    int character;
+    int nb_line = 0;
+    int nb_proc;
+    while ((character = getc(fp)) != EOF){
+      if (character == '\n')
+      ++nb_line;
+    }
+    nb_proc = nb_line;
     /* 2- on recupere les noms des machines : le nom de */
+    int reset = fseek(fp, 0, SEEK_SET);
+    // TODO a finir
+
     /* la machine est un des elements d'identification */
+
+
+
 
     /* creation de la socket d'ecoute */
     /* + ecoute effective */
@@ -98,14 +114,13 @@ int main(int argc, char *argv[])
 
       /* on accepte les connexions des processus dsm */
 
-      /*  On recupere le nom de la machine distante */
+      /* On recupere le nom de la machine distante */
       /* 1- d'abord la taille de la chaine */
       /* 2- puis la chaine elle-meme */
 
       /* On recupere le pid du processus distant  */
 
-      /* On recupere le numero de port de la socket */
-      /* d'ecoute des processus distants */
+      /* On recupere le numero de port de la socket d'ecoute des processus distants */
     }
 
     /* envoi du nombre de processus aux processus dsm*/

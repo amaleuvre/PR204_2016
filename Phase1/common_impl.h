@@ -14,7 +14,7 @@
 
 /* definition du type des infos */
 /* de connexion des processus dsm */
-struct dsm_proc_conn  {
+struct dsm_proc_conn  { // TODO struct dsm_proc_conn
   int rank;
   /* a completer */
 };
