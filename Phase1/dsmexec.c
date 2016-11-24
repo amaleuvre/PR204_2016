@@ -26,6 +26,7 @@ void sigchld_handler(int sig)
 {
   /* on traite les fils qui se terminent */
   /* pour eviter les zombies */
+  waitpid(-1,NULL,WNOHANG);
 }
 
 
@@ -40,6 +41,10 @@ int main(int argc, char *argv[])
 
     /* Mise en place d'un traitant pour recuperer les fils zombies*/
     /* XXX.sa_handler = sigchld_handler; */
+    struct sigaction act_chld;
+    memset(&act_chld, 0, sizeof(struct sigaction));
+    act_chld.sa_handler = sigchld_handler;
+    sigaction(SIGCHLD, &act_chld, NULL);
 
     /* lecture du fichier de machines */
     /* 1- on recupere le nombre de processus a lancer */
@@ -67,8 +72,12 @@ int main(int argc, char *argv[])
       if (pid == 0) { /* fils */
 
         /* redirection stdout */
+        close(pip_out[0]);
+        dup2(pip_out[1],STDOUT_FILENO);
 
         /* redirection stderr */
+        close(pip_err[0]);
+        dup2(pip_err[1],STDERR_FILENO);
 
         /* Creation du tableau d'arguments pour le ssh */
 
@@ -77,6 +86,9 @@ int main(int argc, char *argv[])
 
       } else  if(pid > 0) { /* pere */
         /* fermeture des extremites des tubes non utiles */
+        close(pip_out[1]);
+        close(pip_err[1]);
+
         num_procs_creat++;
       }
     }
@@ -114,6 +126,7 @@ int main(int argc, char *argv[])
   */
 
   /* on attend les processus fils */
+  wait(NULL);
 
   /* on ferme les descripteurs proprement */
 

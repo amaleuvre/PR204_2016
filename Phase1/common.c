@@ -2,14 +2,14 @@
 
 int creer_socket(int prop, int *port_num)
 {
-   int fd = 0;
+  int fd = 0;
 
-   /* fonction de creation et d'attachement */
-   /* d'une nouvelle socket */
-   /* renvoie le numero de descripteur */
-   /* et modifie le parametre port_num */
+  /* fonction de creation et d'attachement */
+  /* d'une nouvelle socket */
+  /* renvoie le numero de descripteur */
+  /* et modifie le parametre port_num */
 
-   return fd;
+  return fd;
 }
 
 /* Vous pouvez ecrire ici toutes les fonctions */

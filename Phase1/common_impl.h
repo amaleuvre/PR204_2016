@@ -15,14 +15,14 @@
 /* definition du type des infos */
 /* de connexion des processus dsm */
 struct dsm_proc_conn  {
-   int rank;
-   /* a completer */
+  int rank;
+  /* a completer */
 };
-typedef struct dsm_proc_conn dsm_proc_conn_t; 
+typedef struct dsm_proc_conn dsm_proc_conn_t;
 
 /* definition du type des infos */
 /* d'identification des processus dsm */
-struct dsm_proc {   
+struct dsm_proc {
   pid_t pid;
   dsm_proc_conn_t connect_info;
 };
