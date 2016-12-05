@@ -7,6 +7,8 @@
 #define DSM_NODE_NUM
 #define BASE_ADDR
 #define TOP_ADDR
+#define NB_MOTS_MAX 100
+#define TAILLE_MOT_MAX 30
 
 /* un tableau gerant les infos d'identification */
 /* des processus dsm */
@@ -37,7 +39,7 @@ int main(int argc, char *argv[])
   } else {
     pid_t pid;
     int num_procs = 0;
-    int i;
+
 
     /* Mise en place d'un traitant pour recuperer les fils zombies*/
     /* XXX.sa_handler = sigchld_handler; */
@@ -47,23 +49,57 @@ int main(int argc, char *argv[])
     sigaction(SIGCHLD, &act_chld, NULL);
 
     /* lecture du fichier de machines */
-    FILE *fp;
-    fp = fopen("machine_file","r");
-    /* 1- on recupere le nombre de processus a lancer */
-    int character;
-    int nb_line = 0;
-    int nb_proc;
-    while ((character = getc(fp)) != EOF){
-      if (character == '\n')
-      ++nb_line;
-    }
-    nb_proc = nb_line;
-    /* 2- on recupere les noms des machines : le nom de */
-    int reset = fseek(fp, 0, SEEK_SET);
-    // TODO a finir
 
+    int fd = open(argv[1],O_RDONLY);
+    int count = 0;
+
+    char c;
+    char** tableau_mots;
+    int i;
+    int j=0;
+    /* 1- on recupere le nombre de processus a lancer */
+
+    /* 2- on recupere les noms des machines : le nom de */
     /* la machine est un des elements d'identification */
 
+    int reset = fseek(fp, 0, SEEK_SET);
+    // TODO enlever l'espace si besoin
+
+    tableau_mots = malloc(sizeof(char*)*NB_MOTS_MAX);
+    for(i = 0;i < NB_MOTS_MAX;i++){
+      tableau_mots[i] = malloc(sizeof(char)*TAILLE_MOT_MAX);
+      memset(tableau_mots[i],0,sizeof(char)*TAILLE_MOT_MAX);
+    }
+    int lu = read(fd,&c,1);
+    i=0;
+
+    // Comptage des lignes + copie des mots
+    while(lu == 1) {
+      if(c == '\n') {
+        j=0;
+        i++;
+        count++;
+      }
+      tableau_mots[i][j]=c;
+      j++;
+      lu = read(fd,&c,1);
+    }
+
+    // Affichage du résultat
+    printf("Nombre de lignes : %d\n",count);
+    for(i = 0; i < NB_MOTS_MAX; i++){
+      if(tableau_mots[i][0] == 0)
+      break;
+      printf("%s\n", tableau_mots[i]);
+    }
+
+    close(fd);
+
+    // Libération de la mémoire
+    for(i = 0; i < NB_MOTS_MAX; i++) {
+      free(tableau_mots[i]);
+    }
+    free(tableau_mots);
 
 
 
@@ -83,7 +119,7 @@ int main(int argc, char *argv[])
 
 
       pid = fork();
-      if(pid == -1) ERROR_EXIT("fork");
+      if(pid == -1) ERROR_EXIT("fork ok");
 
       if (pid == 0) { /* fils */
 
@@ -96,6 +132,8 @@ int main(int argc, char *argv[])
         dup2(pip_err[1],STDERR_FILENO);
 
         /* Creation du tableau d'arguments pour le ssh */
+
+
 
         /* jump to new prog : */
         /* execvp("ssh",newargv); */
