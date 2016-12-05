@@ -2,7 +2,7 @@ ALL: default
 
 CC           = gcc
 CLINKER      = $(CC)
-OPTFLAGS     = -O0
+OPTFLAGS     = -O0 -D_POSIX_SOURCE
 
 
 SHELL = /bin/sh
