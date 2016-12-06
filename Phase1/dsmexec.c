@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 
                /* redirection stdout */
                close(pip_out[0]);
-               //dup2(pip_out[1],STDOUT_FILENO);
+               dup2(pip_out[1],STDOUT_FILENO);
 
                /* redirection stderr */
                close(pip_err[0]);
