@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
                }
                newargv[argc+k] = NULL;
                /* jump to new prog : */
-               printf("just avant ssh\n"); // DEBUG
+               printf("juste avant ssh\n"); // DEBUG
                execvp("ssh",newargv);
 
           } else  if(pid > 0) { /* pere */
