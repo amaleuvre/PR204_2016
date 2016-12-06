@@ -9,6 +9,18 @@ int creer_socket(int prop, int *port_num) // TODO creer_socket(int prop, int *po
   /* renvoie le numero de descripteur */
   /* et modifie le parametre port_num */
 
+  int sock;
+  sock = socket(AF_INET, SOCK_STREAM, 0);
+  struct sockaddr_in sin;
+  memset(&sin, 0, sizeof(struct sockaddr_in));
+  sin.sin_addr.s_addr = htonl(INADDR_ANY);
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons(0);
+
+  bind(sock, (struct sockaddr *)&sin, sizeof(sin));
+
+  // TODO getsockname pour ensuite changer *port_num
+
   return fd;
 }
 
