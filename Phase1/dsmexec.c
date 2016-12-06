@@ -62,6 +62,9 @@ int main(int argc, char *argv[])
           char** tableau_mots;
           int i;
           int j=0;
+          char * newargv[argc + 4];
+          int Taille_du_nom_de_la_machine_distante = 100;
+          char hostname[Taille_du_nom_de_la_machine_distante];
           /* 1- on recupere le nombre de processus a lancer */
 
           /* 2- on recupere les noms des machines : le nom de */
@@ -90,13 +93,13 @@ int main(int argc, char *argv[])
                lu = read(fd,&c,1);
           }
 
-          // Affichage du résultat
+          /* DEBUG // Affichage du résultat
           printf("Nombre de lignes : %d\n",count);
           for(i = 0; i < NB_MOTS_MAX; i++){
                if(tableau_mots[i][0] == 0)
                break;
                printf("%s\n", tableau_mots[i]);
-          }
+          }*/
 
           close(fd);
 
@@ -115,108 +118,119 @@ int main(int argc, char *argv[])
           //inet_addr("127.0.0.1");
           /*struct sockaddr_in
           {
-               short      sin_family;
-               unsigned short   sin_port;
-               struct   in_addr   sin_addr;
-               char   sin_zero[8];
-          };*/
-          struct sockaddr_in sin;
-          sin.sin_addr.s_addr = htonl(INADDR_ANY);
-          sin.sin_family = AF_INET;
-          sin.sin_port = htons(23);
+          short      sin_family;
+          unsigned short   sin_port;
+          struct   in_addr   sin_addr;
+          char   sin_zero[8];
+     };*/
+     struct sockaddr_in sin;
+     memset(&sin, 0, sizeof(struct sockaddr_in));
+     sin.sin_addr.s_addr = htonl(INADDR_ANY);
+     sin.sin_family = AF_INET;
+     sin.sin_port = htons(0);
 
-          bind(sock, (struct sockaddr *)&sin, sizeof(sin));
+     bind(sock, (struct sockaddr *)&sin, sizeof(sin));
 
-          /* + ecoute effective */
+     /* + ecoute effective */
 
-          listen(sock, count);
+     listen(sock, count);
 
-          /* creation des fils */
-          for(i = 0; i < num_procs ; i++) {
+     /* creation des fils */
+     for(i = 0; i < num_procs ; i++) {
 
-               /* creation du tube pour rediriger stdout */
-               int pip_out[2];
-               pipe(pip_out);
+          /* creation du tube pour rediriger stdout */
+          int pip_out[2];
+          pipe(pip_out);
 
-               /* creation du tube pour rediriger stderr */
-               int pip_err[2];
-               pipe(pip_err);
-
-
-               pid = fork();
-               if(pid == -1) ERROR_EXIT("fork ok");
-
-               if (pid == 0) { /* fils */
-
-                    /* redirection stdout */
-                    close(pip_out[0]);
-                    dup2(pip_out[1],STDOUT_FILENO);
-
-                    /* redirection stderr */
-                    close(pip_err[0]);
-                    dup2(pip_err[1],STDERR_FILENO);
-
-                    /* Creation du tableau d'arguments pour le ssh */
+          /* creation du tube pour rediriger stderr */
+          int pip_err[2];
+          pipe(pip_err);
 
 
+          pid = fork();
+          if(pid == -1) ERROR_EXIT("fork ok");
 
-                    /* jump to new prog : */
-                    /* execvp("ssh",newargv); */
+          if (pid == 0) { /* fils */
 
-               } else  if(pid > 0) { /* pere */
-                    /* fermeture des extremites des tubes non utiles */
-                    close(pip_out[1]);
-                    close(pip_err[1]);
+               /* redirection stdout */
+               close(pip_out[0]);
+               dup2(pip_out[1],STDOUT_FILENO);
 
-                    num_procs_creat++;
+               /* redirection stderr */
+               close(pip_err[0]);
+               dup2(pip_err[1],STDERR_FILENO);
+
+               /* Creation du tableau d'arguments pour le ssh */
+               gethostname(hostname, Taille_du_nom_de_la_machine_distante);
+
+               newargv[0] = "ssh";
+               newargv[1] = tableau_mots[i]; //nom de la machine en question
+               newargv[2] = "./bin/dsmwrap"; //chemin vers le programme a executer
+               newargv[3] = inet_ntoa(sin.sin_addr); //adresse IP de la machine
+               sprintf(newargv[4], "%d", ntohs(sin.sin_port)); //numero de port
+               int k;
+               for (k = 1; k < argc - 1; k++){
+                    newargv [4+k] = argv[k+1];
                }
+               newargv[argc+k] = NULL;
+               /* jump to new prog : */
+               printf("just avant ssh\n"); // DEBUG
+               execvp("ssh",newargv);
+
+          } else  if(pid > 0) { /* pere */
+               /* fermeture des extremites des tubes non utiles */
+               close(pip_out[1]);
+               close(pip_err[1]);
+
+               num_procs_creat++;
           }
+     }
 
 
-          for(i = 0; i < num_procs ; i++){
+     for(i = 0; i < num_procs ; i++){
 
-               /* on accepte les connexions des processus dsm */
+          /* on accepte les connexions des processus dsm */
 
 
-               /*struct sockaddr_in csin;
-               socklen_t taille = sizeof(csin);
-               int csock = accept(sock, (sockaddr_in)&csin, &taille);
-               */
+          /*struct sockaddr_in csin;
+          socklen_t taille = sizeof(csin);
+          int csock = accept(sock, (sockaddr_in)&csin, &taille);
+          */
 
-               /* On recupere le nom de la machine distante */
-               /* 1- d'abord la taille de la chaine */
-               /* 2- puis la chaine elle-meme */
+          /* On recupere le nom de la machine distante */
+          /* 1- d'abord la taille de la chaine */
+          /* 2- puis la chaine elle-meme */
 
-               /* On recupere le pid du processus distant  */
+          /* On recupere le pid du processus distant  */
 
-               /* On recupere le numero de port de la socket d'ecoute des processus distants */
-          }
+          /* On recupere le numero de port de la socket d'ecoute des processus distants */
+     }
 
-          /* envoi du nombre de processus aux processus dsm*/
+     /* envoi du nombre de processus aux processus dsm*/
 
-          /* envoi des rangs aux processus dsm */
+     /* envoi des rangs aux processus dsm */
 
-          /* envoi des infos de connexion aux processus */
+     /* envoi des infos de connexion aux processus */
 
-          /* gestion des E/S : on recupere les caracteres */
-          /* sur les tubes de redirection de stdout/stderr */
-          /* while(1)
-          {
-          je recupere les infos sur les tubes de redirection
-          jusqu'à ce qu'ils soient inactifs (ie fermes par les
-          processus dsm ecrivains de l'autre cote ...)
+     /* gestion des E/S : on recupere les caracteres */
+     /* sur les tubes de redirection de stdout/stderr */
+     /* while(1)
+     {
+     je recupere les infos sur les tubes de redirection
+     jusqu'à ce qu'ils soient inactifs (ie fermes par les
+     processus dsm ecrivains de l'autre cote ...)
 
-     };
-     */
+};
+*/
 
-     /* on attend les processus fils */
-     wait(NULL);
+/* on attend les processus fils */
+wait(NULL);
 
-     /* on ferme les descripteurs proprement */
-     // close....
+/* on ferme les descripteurs proprement */
+// close....
 
-     /* on ferme la socket d'ecoute */
-     // int closesocket(int sock);
+/* on ferme la socket d'ecoute */
+// int closesocket(int sock);
 
 }
 exit(EXIT_SUCCESS);
