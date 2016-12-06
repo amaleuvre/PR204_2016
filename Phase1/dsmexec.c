@@ -56,13 +56,12 @@ int main(int argc, char *argv[])
           /* lecture du fichier de machines */
 
           int fd = open(argv[1],O_RDONLY);
-          int count = 0;
 
           char c;
           char** tableau_mots;
           int i;
           int j=0;
-          char * newargv[argc + 4];
+          char **newargv = malloc(argc + 4);
           int Taille_du_nom_de_la_machine_distante = 100;
           char hostname[Taille_du_nom_de_la_machine_distante];
           /* 1- on recupere le nombre de processus a lancer */
@@ -86,20 +85,12 @@ int main(int argc, char *argv[])
                if(c == '\n') {
                     j=0;
                     i++;
-                    count++;
+                    num_procs++;
                }
                tableau_mots[i][j]=c;
                j++;
                lu = read(fd,&c,1);
           }
-
-          /* DEBUG // Affichage du résultat
-          printf("Nombre de lignes : %d\n",count);
-          for(i = 0; i < NB_MOTS_MAX; i++){
-               if(tableau_mots[i][0] == 0)
-               break;
-               printf("%s\n", tableau_mots[i]);
-          }*/
 
           close(fd);
 
@@ -133,7 +124,7 @@ int main(int argc, char *argv[])
 
      /* + ecoute effective */
 
-     listen(sock, count);
+     listen(sock, num_procs);
 
      /* creation des fils */
      for(i = 0; i < num_procs ; i++) {
@@ -148,13 +139,15 @@ int main(int argc, char *argv[])
 
 
           pid = fork();
-          if(pid == -1) ERROR_EXIT("fork ok");
+          if(pid == -1){
+               ERROR_EXIT("fork bug");
+          }
 
           if (pid == 0) { /* fils */
 
                /* redirection stdout */
                close(pip_out[0]);
-               dup2(pip_out[1],STDOUT_FILENO);
+               //dup2(pip_out[1],STDOUT_FILENO);
 
                /* redirection stderr */
                close(pip_err[0]);
@@ -165,16 +158,17 @@ int main(int argc, char *argv[])
 
                newargv[0] = "ssh";
                newargv[1] = tableau_mots[i]; //nom de la machine en question
-               newargv[2] = "./bin/dsmwrap"; //chemin vers le programme a executer
+               newargv[2] = "bin/dsmwrap"; //chemin vers le programme a executer
                newargv[3] = inet_ntoa(sin.sin_addr); //adresse IP de la machine
-               sprintf(newargv[4], "%d", ntohs(sin.sin_port)); //numero de port
+               char temp[100];
+               sprintf(temp, "%d",ntohs(sin.sin_port));
+               newargv[4] = temp; //numero de port
                int k;
                for (k = 1; k < argc - 1; k++){
                     newargv [4+k] = argv[k+1];
                }
                newargv[argc+k] = NULL;
                /* jump to new prog : */
-               printf("juste avant ssh\n"); // DEBUG
                execvp("ssh",newargv);
 
           } else  if(pid > 0) { /* pere */

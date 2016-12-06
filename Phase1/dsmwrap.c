@@ -35,6 +35,6 @@ int main(int argc, char **argv) // TODO dsmwrap.c
 
   /* on execute la bonne commande */
   execvp(finalargs[0],finalargs);
-  
+
   return 0;
 }
