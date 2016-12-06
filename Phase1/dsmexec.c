@@ -113,7 +113,13 @@ int main(int argc, char *argv[])
           sock = socket(AF_INET, SOCK_STREAM, 0);
 
           //inet_addr("127.0.0.1");
-
+          /*struct sockaddr_in
+          {
+               short      sin_family;
+               unsigned short   sin_port;
+               struct   in_addr   sin_addr;
+               char   sin_zero[8];
+          };*/
           struct sockaddr_in sin;
           sin.sin_addr.s_addr = htonl(INADDR_ANY);
           sin.sin_family = AF_INET;
