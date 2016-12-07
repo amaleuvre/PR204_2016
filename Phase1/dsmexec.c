@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
     int i;
     int j=0;
     char **newargv = malloc(argc + 4);
-    int Taille_du_nom_de_la_machine_distante = 100;
-    char hostname[Taille_du_nom_de_la_machine_distante];
+    int Taille_du_nom_de_la_machine = 100;
+    char hostname[Taille_du_nom_de_la_machine];
     /* 1- on recupere le nombre de processus a lancer */
 
     /* 2- on recupere les noms des machines : le nom de */
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
         dup2(pip_err[1],STDERR_FILENO);
 
         /* Creation du tableau d'arguments pour le ssh */
-        gethostname(hostname, Taille_du_nom_de_la_machine_distante);
+        gethostname(hostname, Taille_du_nom_de_la_machine);
 
         newargv[0] = "ssh";
         newargv[1] = tableau_mots[i]; //nom de la machine en question
@@ -174,13 +174,19 @@ int main(int argc, char *argv[])
       /* on accepte les connexions des processus dsm */
 
 
-      /*struct sockaddr_in csin;
+      struct sockaddr_in csin;
+
+      memset(&csin, 0, sizeof(struct sockaddr_in));
+
       socklen_t taille = sizeof(csin);
       int csock = accept(sock, (sockaddr_in)&csin, &taille);
-      */
+
 
       /* On recupere le nom de la machine distante */
       /* 1- d'abord la taille de la chaine */
+
+      read(int fd, void *buf, size_t count);
+
       /* 2- puis la chaine elle-meme */
 
       /* On recupere le pid du processus distant  */
