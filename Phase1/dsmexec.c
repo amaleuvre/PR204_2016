@@ -168,30 +168,47 @@ int main(int argc, char *argv[])
       }
     }
 
+    typedef struct info_machine {
+      char *nom;
+      pid_t pid;
+      int port;
+      int rang;
+    }info_machine;
+
+    struct info_machine bdd[num_procs];
+    struct info_machine machine;
 
     for(i = 0; i < num_procs ; i++){
 
+      memset(&machine, 0, sizeof(struct info_machine));
+
       /* on accepte les connexions des processus dsm */
-
-
       struct sockaddr_in csin;
-
       memset(&csin, 0, sizeof(struct sockaddr_in));
-
       socklen_t taille = sizeof(csin);
-      int csock = accept(sock, (sockaddr_in)&csin, &taille);
-
+      int csock = accept(sock, (struct sockaddr*)&csin, &taille);
 
       /* On recupere le nom de la machine distante */
       /* 1- d'abord la taille de la chaine */
 
-      read(int fd, void *buf, size_t count);
-
       /* 2- puis la chaine elle-meme */
+      read(csock, &machine.nom, sizeof(machine.nom));
 
       /* On recupere le pid du processus distant  */
+      read(csock, &machine.pid, sizeof(machine.pid));
 
       /* On recupere le numero de port de la socket d'ecoute des processus distants */
+      read(csock, &machine.port, sizeof(machine.port));
+
+      // attribution des numéros de rang;
+      int j;
+      for(j=0; j < num_procs; j++){
+        if (0 == strncmp(machine.nom, tableau_mots[j], strlen(machine.nom))) machine.rang = j;
+      }
+
+
+      bdd[i] = machine;
+      printf("Machine[%i] : nom(%s)   pid(%i)  port(%i)  rang(%i)\n", i, machine.nom, machine.pid, machine.port, machine.rang);
     }
 
     /* envoi du nombre de processus aux processus dsm*/
