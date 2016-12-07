@@ -8,20 +8,29 @@ int creer_socket(int prop, int *port_num){
   /* renvoie le numero de descripteur */
   /* et modifie le parametre port_num */
 
-  int sock;
-  sock = socket(AF_INET, SOCK_STREAM, 0);
+  fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (-1 == fd){
+    perror("socket");
+    exit(EXIT_FAILURE);
+  }
   struct sockaddr_in sin;
   memset(&sin, 0, sizeof(struct sockaddr_in));
   sin.sin_addr.s_addr = htonl(INADDR_ANY);
   sin.sin_family = AF_INET;
   sin.sin_port = htons(0);
 
-  bind(sock, (struct sockaddr *)&sin, sizeof(sin));
+  // setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable))
 
-  getsockname(fd, (struct sockaddr *)&sin, (socklen_t *)sizeof(sin));
-  char port_num_temp[100]; // TODO changer le 100, pourquoi 100 ?
-  sprintf(port_num_temp, "%d",ntohs(sin.sin_port));
-  port_num = (int *)port_num_temp;
+  if (-1 == bind(fd, (struct sockaddr *)&sin, sizeof(sin))){
+    perror("bind");
+    exit(EXIT_FAILURE);
+  }
+  int taille = sizeof(sin);
+  if (-1 == getsockname(fd, (struct sockaddr *)&sin, (socklen_t *)&taille)){
+    perror("getsockname");
+    exit(EXIT_FAILURE);
+  }
+  *port_num = ntohs(sin.sin_port);
   return fd;
 }
 
