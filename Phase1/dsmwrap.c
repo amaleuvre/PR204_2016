@@ -17,10 +17,14 @@ int main(int argc, char **argv) // TODO dsmwrap.c
   }
   finalargs[argc-4] = NULL;
 
-
-  /*  creation d'une socket pour se connecter au */
+  /* creation d'une socket pour se connecter au */
   /* au lanceur et envoyer/recevoir les infos */
   /* necessaires pour la phase dsm_init */
+  int port_num;
+  int prop = 0;
+  int fd;
+
+  fd = creer_socket(prop, &port_num);
 
   /*  Envoi du nom de machine au lanceur */
 

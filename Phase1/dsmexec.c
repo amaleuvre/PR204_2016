@@ -1,7 +1,4 @@
 #include "common_impl.h"
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 
 /* variables globales */
 #define PAGE_NUMBER
@@ -151,7 +148,7 @@ int main(int argc, char *argv[])
         newargv[1] = tableau_mots[i]; //nom de la machine en question
         newargv[2] = "bin/dsmwrap"; //chemin vers le programme a executer
         newargv[3] = inet_ntoa(sin.sin_addr); //adresse IP de la machine
-        char temp[100];
+        char temp[100]; // TODO changer le 100, pourquoi 100 ?
         sprintf(temp, "%d",ntohs(sin.sin_port));
         newargv[4] = temp; //numero de port
         int k;

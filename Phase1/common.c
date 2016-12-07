@@ -1,7 +1,6 @@
 #include "common_impl.h"
 
-int creer_socket(int prop, int *port_num) // TODO creer_socket(int prop, int *port_num)
-{
+int creer_socket(int prop, int *port_num){
   int fd = 0;
 
   /* fonction de creation et d'attachement */
@@ -19,8 +18,10 @@ int creer_socket(int prop, int *port_num) // TODO creer_socket(int prop, int *po
 
   bind(sock, (struct sockaddr *)&sin, sizeof(sin));
 
-  // TODO getsockname pour ensuite changer *port_num
-
+  getsockname(fd, (struct sockaddr *)&sin, (socklen_t *)sizeof(sin));
+  char port_num_temp[100]; // TODO changer le 100, pourquoi 100 ?
+  sprintf(port_num_temp, "%d",ntohs(sin.sin_port));
+  port_num = (int *)port_num_temp;
   return fd;
 }
 
