@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 
 
       bdd[i] = machine;
-      printf("Machine[%i] : nom(%s)   pid(%i)  port(%i)  rang(%i)\n", i, machine.nom, machine.pid, machine.port, machine.rang);
+      printf("Machine[%i] : nom(%s)  pid(%i)  port(%i)  rang(%i)\n", i, machine.nom, machine.pid, machine.port, machine.rang);
     }
 
     /* envoi du nombre de processus aux processus dsm*/
