@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 
         /* redirection stdout */
         close(pip_out[0]);
-        dup2(pip_out[1],STDOUT_FILENO);
+        //dup2(pip_out[1],STDOUT_FILENO);
 
         /* redirection stderr */
         close(pip_err[0]);
@@ -181,6 +181,8 @@ int main(int argc, char *argv[])
     for(i = 0; i < num_procs ; i++){
 
       memset(&machine, 0, sizeof(struct info_machine));
+
+      // TODO fd[i] = accept ....
 
       /* on accepte les connexions des processus dsm */
       struct sockaddr_in csin;
