@@ -13,6 +13,7 @@ int main(int argc, char **argv) // TODO dsmwrap.c
   char * finalargs[argc - 4];
   int name_len = 100; // TODO pourquoi 100 ?
   char name[name_len];
+  int sent;
 
   int i;
   for (i = 0; i< argc - 4; i++){
@@ -33,30 +34,44 @@ int main(int argc, char **argv) // TODO dsmwrap.c
   lanceur_sin.sin_family = AF_INET;
   lanceur_sin.sin_port = htons(atoi(hostport)); // attention format
 
-  if (-1 == connect(fd1, (struct sockaddr *)&lanceur_sin, sizeof(lanceur_sin))){
-    perror("connect");
-    exit(EXIT_FAILURE);
-  }
-
+  /*int con = 1;
+  while (con != 0){
+		con = connect(fd1, (struct sockaddr *)&lanceur_sin, sizeof(lanceur_sin));
+  }*/
+  connect(fd1, (struct sockaddr *)&lanceur_sin, sizeof(lanceur_sin));
   /*  Envoi du nom de machine au lanceur */
   if (-1 == gethostname(name, name_len)){
     perror("gethostname");
     exit(EXIT_FAILURE);
   }
 
-  if (-1 == write(fd1, &name, name_len)) {
+  /*if (-1 == write(fd1, &name, name_len)) {
     perror("write");
     exit(EXIT_FAILURE);
-  }
+  }*/
+
+  sent = 0;
+  do {
+    sent += write(fd1, &name + sent, name_len - sent);
+  } while(sent != name_len);
+
+  /*void do_write(fd1, &name, name_len){
+
+  }*/
 
   /*  Envoi du pid au lanceur */
   pid_t pid;
   pid = getpid();
 
-  if (-1 == write(fd1, &pid, sizeof(pid_t))) {
+  /*if (-1 == write(fd1, &pid, sizeof(pid_t))) {
     perror("write");
     exit(EXIT_FAILURE);
-  }
+  }*/
+  sent = 0;
+  do {
+    sent += write(fd1, &pid + sent, sizeof(pid_t) - sent);
+  } while(sent != sizeof(pid_t));
+
 
   /*  Creation de la socket d'ecoute pour les */
   /* connexions avec les autres processus dsm */
@@ -73,10 +88,15 @@ int main(int argc, char **argv) // TODO dsmwrap.c
   /* pour qu'il le propage à tous les autres */
   /* processus dsm */
 
-  if (write(fd1, &port_dsm, sizeof(port_dsm)) == -1) {
+  /*if (write(fd1, &port_dsm, sizeof(port_dsm)) == -1) {
     perror("write");
     exit(EXIT_FAILURE);
-  }
+  }*/
+  sent = 0;
+  do {
+    sent += write(fd1, &port_dsm + sent, sizeof(port_dsm) - sent);
+  } while(sent != sizeof(port_dsm));
+
 
   /* on execute la bonne commande */
   execvp(finalargs[0],finalargs);

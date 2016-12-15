@@ -10,6 +10,13 @@
 #define NB_MOTS_MAX 100
 #define TAILLE_MOT_MAX 30
 
+typedef struct info_machine {
+  char nom[256];
+  pid_t pid;
+  int port;
+  int rang;
+}info_machine;
+
 /* un tableau gerant les infos d'identification */
 /* des processus dsm */
 dsm_proc_t *proc_array = NULL;
@@ -33,6 +40,11 @@ void sigchld_handler(int sig) // TODO en démasquant les sigchild
   // pour tous les traiter
 }
 
+int toto(void)
+{
+  int a = 0;
+  return a;
+}
 
 int main(int argc, char *argv[])
 {
@@ -55,12 +67,13 @@ int main(int argc, char *argv[])
     int fd = open(argv[1],O_RDONLY);
 
     char c;
-    char** tableau_mots;
+    char* tableau_mots[NB_MOTS_MAX];
     int i;
     int j=0;
-    char **newargv = malloc(argc + 4);
+    char **newargv = malloc((argc + 4)*sizeof(char *));
     int Taille_du_nom_de_la_machine = 100;
     char hostname[Taille_du_nom_de_la_machine];
+
     /* 1- on recupere le nombre de processus a lancer */
 
     /* 2- on recupere les noms des machines : le nom de */
@@ -69,7 +82,7 @@ int main(int argc, char *argv[])
     // int reset = fseek(fd, 0, SEEK_SET);
     // TODO enlever l'espace si besoin
 
-    tableau_mots = malloc(sizeof(char*)*NB_MOTS_MAX);
+    //tableau_mots = malloc(sizeof(char*)*NB_MOTS_MAX);
     for(i = 0;i < NB_MOTS_MAX;i++){
       tableau_mots[i] = malloc(sizeof(char)*TAILLE_MOT_MAX);
       memset(tableau_mots[i],0,sizeof(char)*TAILLE_MOT_MAX);
@@ -83,20 +96,18 @@ int main(int argc, char *argv[])
         j=0;
         i++;
         num_procs++;
+        lu = read(fd,&c,1);
       }
       tableau_mots[i][j]=c;
       j++;
       lu = read(fd,&c,1);
     }
-
     close(fd);
 
-    // Libération de la mémoire
-    for(i = 0; i < NB_MOTS_MAX; i++) {
-      free(tableau_mots[i]);
+    int o;
+    for (o = 0; o < num_procs; o++) {
+      printf("%s\n", tableau_mots[o]);
     }
-    free(tableau_mots);
-
 
 
     /* creation de la socket d'ecoute */
@@ -139,23 +150,45 @@ int main(int argc, char *argv[])
 
         /* redirection stderr */
         close(pip_err[0]);
-        dup2(pip_err[1],STDERR_FILENO);
+        //dup2(pip_err[1],STDERR_FILENO);
 
         /* Creation du tableau d'arguments pour le ssh */
         gethostname(hostname, Taille_du_nom_de_la_machine);
 
         newargv[0] = "ssh";
         newargv[1] = tableau_mots[i]; //nom de la machine en question
-        newargv[2] = "bin/dsmwrap"; //chemin vers le programme a executer
+
+        //fprintf(stdout,"Exec[%i] ============== %s\n",i,tableau_mots[i]);
+
+        newargv[2] = "~/Documents/S7/PR204/Phase1/bin/dsmwrap"; //chemin vers le programme a executer
+        fprintf(stdout,"Exec[%i] ============== %s %i\n",i,newargv[1],getpid());
+
+        //  char *ptr =  inet_ntoa(sin.sin_addr);
+        //newargv[3] = "coucou";//malloc(64);
+        //strcpy(newargv[3],ptr);
         newargv[3] = inet_ntoa(sin.sin_addr); //adresse IP de la machine
-        char temp[100]; // TODO changer le 100, pourquoi 100 ?
-        sprintf(temp, "%d",ntohs(sin.sin_port));
-        newargv[4] = temp; //numero de port
+
+
+        //char temp[100]; // TODO changer le 100, pourquoi 100 ?
+        //sprintf(temp, "%d",ntohs(sin.sin_port));
+        //newargv[4] = temp; //numero de port
+
+
+
         int k;
         for (k = 1; k < argc - 1; k++){
           newargv [4+k] = argv[k+1];
         }
         newargv[argc+k] = NULL;
+
+
+
+        int t;
+        for (t = 0; t < argc + 4; t++) {
+          printf("%s\n",newargv[t]);
+        }
+        fflush(stdout);
+
         /* jump to new prog : */
         execvp("ssh",newargv);
 
@@ -167,13 +200,6 @@ int main(int argc, char *argv[])
         num_procs_creat++;
       }
     }
-
-    typedef struct info_machine {
-      char *nom;
-      pid_t pid;
-      int port;
-      int rang;
-    }info_machine;
 
     struct info_machine bdd[num_procs];
     struct info_machine machine;
@@ -189,7 +215,7 @@ int main(int argc, char *argv[])
       memset(&csin, 0, sizeof(struct sockaddr_in));
       socklen_t taille = sizeof(csin);
       int csock = accept(sock, (struct sockaddr*)&csin, &taille);
-
+      if (csock == -1) printf("Erreur à l'accept\n");
       /* On recupere le nom de la machine distante */
       /* 1- d'abord la taille de la chaine */
 
@@ -203,9 +229,9 @@ int main(int argc, char *argv[])
       read(csock, &machine.port, sizeof(machine.port));
 
       // attribution des numéros de rang;
-      int j;
-      for(j=0; j < num_procs; j++){
-        if (0 == strncmp(machine.nom, tableau_mots[j], strlen(machine.nom))) machine.rang = j;
+      int h;
+      for(h=0; h < num_procs; h++){
+        if (0 == strncmp(machine.nom, tableau_mots[h], strlen(machine.nom))) machine.rang = h;
       }
 
 
