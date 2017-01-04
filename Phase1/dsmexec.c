@@ -153,38 +153,40 @@ int main(int argc, char *argv[])
         //dup2(pip_err[1],STDERR_FILENO);
 
         /* Creation du tableau d'arguments pour le ssh */
-        gethostname(hostname, Taille_du_nom_de_la_machine);
 
         newargv[0] = "ssh";
         newargv[1] = tableau_mots[i]; //nom de la machine en question
 
         //fprintf(stdout,"Exec[%i] ============== %s\n",i,tableau_mots[i]);
 
-        newargv[2] = "~/Documents/S7/PR204/Phase1/bin/dsmwrap"; //chemin vers le programme a executer
-        fprintf(stdout,"Exec[%i] ============== %s %i\n",i,newargv[1],getpid());
+        newargv[2] = "/net/t/amaleuvre/Documents/S7/PR204/Phase1/bin/dsmwrap"; //chemin vers le programme a executer
+        //fprintf(stdout,"Exec[%i] ============== %s %i\n",i,newargv[1],getpid());
 
-        //  char *ptr =  inet_ntoa(sin.sin_addr);
-        //newargv[3] = "coucou";//malloc(64);
-        //strcpy(newargv[3],ptr);
-        newargv[3] = inet_ntoa(sin.sin_addr); //adresse IP de la machine
+        gethostname(hostname, Taille_du_nom_de_la_machine);
+        struct hostent* res;
+        struct in_addr* addr;
+        res = gethostbyname(hostname);
+        addr = (struct in_addr*) res->h_addr_list[0];
 
-
-        //char temp[100]; // TODO changer le 100, pourquoi 100 ?
-        //sprintf(temp, "%d",ntohs(sin.sin_port));
-        //newargv[4] = temp; //numero de port
+        newargv[3] = inet_ntoa(*addr); //adresse IP de la machine
 
 
+        char temp[100]; // TODO changer le 100, pourquoi 100 ?
+        sprintf(temp, "%d", ntohs(sin.sin_port));
+        newargv[4] = temp; //numero de port
+        //printf("!!!!!!!!!!!! %s\n", temp);
+
+        newargv[5] = "rank?"; //rank
 
         int k;
         for (k = 1; k < argc - 1; k++){
-          newargv [4+k] = argv[k+1];
+          newargv [5+k] = argv[k+1];
         }
         newargv[argc+k] = NULL;
 
 
-
         int t;
-        for (t = 0; t < argc + 4; t++) {
+        for (t = 0; t < argc + 6; t++) {
           printf("%s\n",newargv[t]);
         }
         fflush(stdout);
@@ -204,6 +206,8 @@ int main(int argc, char *argv[])
     struct info_machine bdd[num_procs];
     struct info_machine machine;
 
+    int taille_nom;
+
     for(i = 0; i < num_procs ; i++){
 
       memset(&machine, 0, sizeof(struct info_machine));
@@ -218,15 +222,16 @@ int main(int argc, char *argv[])
       if (csock == -1) printf("Erreur à l'accept\n");
       /* On recupere le nom de la machine distante */
       /* 1- d'abord la taille de la chaine */
+      read(csock, &taille_nom, sizeof(int));
 
       /* 2- puis la chaine elle-meme */
-      read(csock, &machine.nom, sizeof(machine.nom));
+      read(csock, &machine.nom, taille_nom*sizeof(char));
 
       /* On recupere le pid du processus distant  */
-      read(csock, &machine.pid, sizeof(machine.pid));
+      read(csock, &machine.pid, sizeof(int));
 
       /* On recupere le numero de port de la socket d'ecoute des processus distants */
-      read(csock, &machine.port, sizeof(machine.port));
+      read(csock, &machine.port, sizeof(int));
 
       // attribution des numéros de rang;
       int h;

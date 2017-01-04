@@ -45,10 +45,17 @@ int main(int argc, char **argv) // TODO dsmwrap.c
     exit(EXIT_FAILURE);
   }
 
-  /*if (-1 == write(fd1, &name, name_len)) {
-    perror("write");
-    exit(EXIT_FAILURE);
-  }*/
+  int taille_nom = 0;
+  while(name[taille_nom] != '\0'){
+    taille_nom = taille_nom + 1;
+  }
+
+  sent = 0;
+  do {
+    sent += write(fd1, &taille_nom + sent, sizeof(int) - sent);
+  } while(sent != sizeof(int));
+
+
 
   sent = 0;
   do {
@@ -63,10 +70,7 @@ int main(int argc, char **argv) // TODO dsmwrap.c
   pid_t pid;
   pid = getpid();
 
-  /*if (-1 == write(fd1, &pid, sizeof(pid_t))) {
-    perror("write");
-    exit(EXIT_FAILURE);
-  }*/
+
   sent = 0;
   do {
     sent += write(fd1, &pid + sent, sizeof(pid_t) - sent);
@@ -88,10 +92,7 @@ int main(int argc, char **argv) // TODO dsmwrap.c
   /* pour qu'il le propage à tous les autres */
   /* processus dsm */
 
-  /*if (write(fd1, &port_dsm, sizeof(port_dsm)) == -1) {
-    perror("write");
-    exit(EXIT_FAILURE);
-  }*/
+
   sent = 0;
   do {
     sent += write(fd1, &port_dsm + sent, sizeof(port_dsm) - sent);
