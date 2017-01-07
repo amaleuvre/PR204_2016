@@ -31,6 +31,7 @@ int creer_socket(int prop, int *port_num){
     exit(EXIT_FAILURE);
   }
   *port_num = ntohs(sin.sin_port);
+  printf("PORT : %i\n",*port_num);
   return fd;
 }
 

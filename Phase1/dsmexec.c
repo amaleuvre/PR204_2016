@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     char* tableau_mots[NB_MOTS_MAX];
     int i;
     int j=0;
-    char **newargv = malloc((argc + 4)*sizeof(char *));
+    char **newargv = malloc((argc + 5)*sizeof(char *));
     int Taille_du_nom_de_la_machine = 100;
     char hostname[Taille_du_nom_de_la_machine];
 
@@ -112,14 +112,15 @@ int main(int argc, char *argv[])
 
     /* creation de la socket d'ecoute */
     int sock;
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    struct sockaddr_in sin;
+    int port_num = 9999;
+    sock = creer_socket(0, &port_num);
+    /*struct sockaddr_in sin;
     memset(&sin, 0, sizeof(struct sockaddr_in));
     sin.sin_addr.s_addr = htonl(INADDR_ANY);
     sin.sin_family = AF_INET;
     sin.sin_port = htons(0);
 
-    bind(sock, (struct sockaddr *)&sin, sizeof(sin));
+    bind(sock, (struct sockaddr *)&sin, sizeof(sin));*/
 
     /* + ecoute effective */
 
@@ -171,25 +172,26 @@ int main(int argc, char *argv[])
         newargv[3] = inet_ntoa(*addr); //adresse IP de la machine
 
 
-        char temp[100]; // TODO changer le 100, pourquoi 100 ?
-        sprintf(temp, "%d", ntohs(sin.sin_port));
-        newargv[4] = temp; //numero de port
-        //printf("!!!!!!!!!!!! %s\n", temp);
 
-        newargv[5] = "rank?"; //rank
+        newargv[4] = malloc(6*sizeof(char));
+        sprintf(newargv[4], "%d", port_num); //numero de port
+        printf("%s \n",newargv[4]);
+
+
+
 
         int k;
         for (k = 1; k < argc - 1; k++){
-          newargv [5+k] = argv[k+1];
+          newargv [4+k] = argv[k+1];
         }
         newargv[argc+k] = NULL;
 
-
+        /*
         int t;
-        for (t = 0; t < argc + 6; t++) {
-          printf("%s\n",newargv[t]);
-        }
-        fflush(stdout);
+        for (t = 0; t < argc + 5; t++) {
+          fprintf(stdout,"arg %i : %s\n", t,newargv[t]);
+          fflush(stdout);
+        }*/
 
         /* jump to new prog : */
         execvp("ssh",newargv);
@@ -218,8 +220,14 @@ int main(int argc, char *argv[])
       struct sockaddr_in csin;
       memset(&csin, 0, sizeof(struct sockaddr_in));
       socklen_t taille = sizeof(csin);
-      int csock = accept(sock, (struct sockaddr*)&csin, &taille);
-      if (csock == -1) printf("Erreur à l'accept\n");
+
+      int csock;
+      do {
+      csock = accept(sock, (struct sockaddr*)&csin, &taille);
+    } while((csock == -1) && (errno == EINTR));
+
+
+
       /* On recupere le nom de la machine distante */
       /* 1- d'abord la taille de la chaine */
       read(csock, &taille_nom, sizeof(int));
