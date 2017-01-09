@@ -6,7 +6,7 @@
 
 int main(int argc, char *argv[])
 {
-  int fd;
+	/*int fd;
   int i;
   char str[1024];
   char exec_path[1024];
@@ -23,8 +23,11 @@ int main(int argc, char *argv[])
   fd = open(exec_path,O_RDONLY);
   if(fd == -1) perror("open");
   fprintf(stdout,"================ Valeur du descripteur : %i\n",fd);
+	 */
 
-  fflush(stdout);
-  fflush(stderr);
-  return 0;
+	fprintf(stdout, "Truc marche\n");
+
+	fflush(stdout);
+	fflush(stderr);
+	return 0;
 }

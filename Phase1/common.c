@@ -31,7 +31,7 @@ int creer_socket(int prop, int *port_num){
     exit(EXIT_FAILURE);
   }
   *port_num = ntohs(sin.sin_port);
-  printf("PORT : %i\n",*port_num);
+  //printf("PORT : %i\n",*port_num);
   return fd;
 }
 
@@ -40,3 +40,19 @@ int creer_socket(int prop, int *port_num){
 /* et le processus intermediaire. N'oubliez pas */
 /* de declarer le prototype de ces nouvelles */
 /* fonctions dans common_impl.h */
+
+void do_write(int fd, void *data, int size) {
+  int sent = 0;
+  do{
+    sent += write(fd, data + sent, size - sent);
+  } while(sent != size);
+}
+
+void do_read(int sock, void *data, int size){
+  int received = 0;
+  int test = 0;
+  do {
+    test = read(sock, data + received, size - received);
+    if (test !=-1) received += test;
+  } while(((test == -1) && (errno == EINTR)) || (received != size));
+}

@@ -12,8 +12,8 @@
 
 typedef struct info_machine {
   char nom[256];
-  pid_t pid;
-  int port;
+  char pid[6];
+  char port[6];
   int rang;
 }info_machine;
 
@@ -31,7 +31,7 @@ void usage(void)
   exit(EXIT_FAILURE);
 }
 
-void sigchld_handler(int sig) // TODO en démasquant les sigchild
+void sigchld_handler(int sig) // TODO faire un variable volatile pour bien recupérer tous les fils
 {
   /* on traite les fils qui se terminent */
   /* pour eviter les zombies */
@@ -158,40 +158,23 @@ int main(int argc, char *argv[])
         newargv[0] = "ssh";
         newargv[1] = tableau_mots[i]; //nom de la machine en question
 
-        //fprintf(stdout,"Exec[%i] ============== %s\n",i,tableau_mots[i]);
-
         newargv[2] = "/net/t/amaleuvre/Documents/S7/PR204/Phase1/bin/dsmwrap"; //chemin vers le programme a executer
-        //fprintf(stdout,"Exec[%i] ============== %s %i\n",i,newargv[1],getpid());
 
         gethostname(hostname, Taille_du_nom_de_la_machine);
         struct hostent* res;
         struct in_addr* addr;
         res = gethostbyname(hostname);
         addr = (struct in_addr*) res->h_addr_list[0];
-
         newargv[3] = inet_ntoa(*addr); //adresse IP de la machine
-
-
 
         newargv[4] = malloc(6*sizeof(char));
         sprintf(newargv[4], "%d", port_num); //numero de port
-        printf("%s \n",newargv[4]);
-
-
-
 
         int k;
         for (k = 1; k < argc - 1; k++){
           newargv [4+k] = argv[k+1];
         }
         newargv[argc+k] = NULL;
-
-        /*
-        int t;
-        for (t = 0; t < argc + 5; t++) {
-          fprintf(stdout,"arg %i : %s\n", t,newargv[t]);
-          fflush(stdout);
-        }*/
 
         /* jump to new prog : */
         execvp("ssh",newargv);
@@ -214,8 +197,6 @@ int main(int argc, char *argv[])
 
       memset(&machine, 0, sizeof(struct info_machine));
 
-      // TODO fd[i] = accept ....
-
       /* on accepte les connexions des processus dsm */
       struct sockaddr_in csin;
       memset(&csin, 0, sizeof(struct sockaddr_in));
@@ -227,31 +208,42 @@ int main(int argc, char *argv[])
     } while((csock == -1) && (errno == EINTR));
 
 
-
       /* On recupere le nom de la machine distante */
       /* 1- d'abord la taille de la chaine */
-      read(csock, &taille_nom, sizeof(int));
+      do_read(csock, &taille_nom, sizeof(int));
 
       /* 2- puis la chaine elle-meme */
-      read(csock, &machine.nom, taille_nom*sizeof(char));
+      do_read(csock, machine.nom, taille_nom*sizeof(char));
 
       /* On recupere le pid du processus distant  */
-      read(csock, &machine.pid, sizeof(int));
+      do_read(csock, machine.pid, 6*sizeof(char));
 
       /* On recupere le numero de port de la socket d'ecoute des processus distants */
-      read(csock, &machine.port, sizeof(int));
+      do_read(csock, machine.port, 6*sizeof(char));
 
       // attribution des numéros de rang;
       int h;
+      char chaine[14] = ".pedago.ipb.fr";
+      char *nom_complet;
       for(h=0; h < num_procs; h++){
         if (0 == strncmp(machine.nom, tableau_mots[h], strlen(machine.nom))) machine.rang = h;
+        nom_complet = malloc(strlen(machine.nom));
+        strcpy(nom_complet, tableau_mots[h]);
+        strcat(nom_complet, chaine);
+        if (0 == strncmp(machine.nom, nom_complet, strlen(machine.nom))){
+          machine.rang = h;
+          strcpy(machine.nom, tableau_mots[h]);
+        }
       }
 
+      bdd[machine.rang] = machine;
+      //printf("Nom(%s)  pid(%s)  port(%s)  rang(%i)\n", machine.nom, machine.pid, machine.port, machine.rang);
 
-      bdd[i] = machine;
-      printf("Machine[%i] : nom(%s)  pid(%i)  port(%i)  rang(%i)\n", i, machine.nom, machine.pid, machine.port, machine.rang);
     }
 
+    for(i = 0; i < num_procs ; i++){
+      printf("Rang(%i): Nom(%s)  pid(%s)  port(%s)\n", bdd[i].rang, bdd[i].nom, bdd[i].pid, bdd[i].port);
+    }
     /* envoi du nombre de processus aux processus dsm*/
 
     /* envoi des rangs aux processus dsm */

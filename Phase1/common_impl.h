@@ -34,3 +34,9 @@ struct dsm_proc {
 typedef struct dsm_proc dsm_proc_t;
 
 int creer_socket(int type, int *port_num);
+
+/* autres fonctions utiles*/
+
+void do_write(int fd, void *data, int size);
+
+void do_read(int sock, void *data, int size);
