@@ -5,17 +5,25 @@ int main(int argc, char **argv)
   /*  processus intermediaire pour "nettoyer" */
   /* la liste des arguments qu'on va passer */
   /* a la commande a executer vraiment */
-  /* on passe de "exec(./dsmwrap hostIP hostport truc args)" */
-  /* à : "truc args" */
+  /* on passe de "./dsmwrap hostIP hostport truc args)" */
+  /* à : "./truc args" */
 
   char *hostIP = argv[1];
   char *hostport = argv[2];
-  //char * rank = argv[3]; NON PAS ICI
-  char * finalargs[argc - 3];
-  int name_len = 100; // TODO pourquoi 100 ?
-  char name[name_len];
+  char * finalargs[argc - 3]; // arguments finaux pour execvp
+  int name_len = 100; // taille max d'un nom, arbitraire
+  char name[name_len]; // nom de la machine
+  int i; // pour la boucle qui change les arguments
+  int fd1; // socket pour se connecter à l'host
+  struct sockaddr_in lanceur_sin;
+  int test_connect; // assure que le connect fonctionne
+  int taille_nom = 0; //taille effective du nom
+  pid_t pid; // pid du processus
+  int fd2; // socket pour se connecter aux autres machines
+  int port_dsm; // num de port de la socket pour se connecter aux autres machines
+  int prop_dsm = 0; // proprietes pour creation socket
+  
 
-  int i;
   for (i = 0; i< argc - 3; i++){
     finalargs[i] = argv[3 + i];
   }
@@ -25,20 +33,13 @@ int main(int argc, char **argv)
   /* au lanceur et envoyer/recevoir les infos */
   /* necessaires pour la phase dsm_init */
 
-
-  //printf("hostIP : %s\n",hostIP);
-  //printf("hostport : %s\n",hostport);
-
-  int fd1;
   fd1 = socket(AF_INET, SOCK_STREAM, 0);
 
-  struct sockaddr_in lanceur_sin;
   memset(&lanceur_sin, 0, sizeof(struct sockaddr_in));
-  inet_aton(hostIP,&lanceur_sin.sin_addr); // attention format
+  inet_aton(hostIP,&lanceur_sin.sin_addr);
   lanceur_sin.sin_family = AF_INET;
-  lanceur_sin.sin_port = htons(atoi(hostport)); // attention format
+  lanceur_sin.sin_port = htons(atoi(hostport));
 
-  int test_connect;
   do {test_connect = connect(fd1, (struct sockaddr *)&lanceur_sin, sizeof(struct sockaddr_in));
   } while(test_connect == -1);
 
@@ -48,7 +49,6 @@ int main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  int taille_nom = 0;
   while(name[taille_nom] != '\0'){
     taille_nom = taille_nom + 1;
   }
@@ -58,7 +58,6 @@ int main(int argc, char **argv)
   do_write(fd1, &name, taille_nom);
 
   /*  Envoi du pid au lanceur */
-  pid_t pid;
   pid = getpid();
   char pid_to_send[6];
   sprintf(pid_to_send, "%d", pid);
@@ -66,9 +65,6 @@ int main(int argc, char **argv)
 
   /*  Creation de la socket d'ecoute pour les */
   /* connexions avec les autres processus dsm */
-  int port_dsm;
-  int prop_dsm = 0;
-  int fd2;
 
   fd2 = creer_socket(prop_dsm, &port_dsm);
   if (-1 == fd2){
@@ -84,9 +80,8 @@ int main(int argc, char **argv)
   sprintf(port_to_send, "%d", port_dsm);
   do_write(fd1, &port_to_send, 6*sizeof(char));
 
-
-  fflush(stdout);
-  /* on execute la bonne commande */
+  //fflush(stdout);
+  /* on execute le programme voulu */
   execvp(finalargs[0],finalargs);
 
   return EXIT_SUCCESS;

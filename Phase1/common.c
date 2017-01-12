@@ -2,6 +2,8 @@
 
 int creer_socket(int prop, int *port_num){
   int fd = 0;
+  struct sockaddr_in sin;
+  int taille = sizeof(sin);
 
   /* fonction de creation et d'attachement */
   /* d'une nouvelle socket */
@@ -13,7 +15,7 @@ int creer_socket(int prop, int *port_num){
     perror("socket");
     exit(EXIT_FAILURE);
   }
-  struct sockaddr_in sin;
+
   memset(&sin, 0, sizeof(struct sockaddr_in));
   sin.sin_addr.s_addr = htonl(INADDR_ANY);
   sin.sin_family = AF_INET;
@@ -25,13 +27,12 @@ int creer_socket(int prop, int *port_num){
     perror("bind");
     exit(EXIT_FAILURE);
   }
-  int taille = sizeof(sin);
+
   if (-1 == getsockname(fd, (struct sockaddr *)&sin, (socklen_t *)&taille)){
     perror("getsockname");
     exit(EXIT_FAILURE);
   }
   *port_num = ntohs(sin.sin_port);
-  //printf("PORT : %i\n",*port_num);
   return fd;
 }
 
